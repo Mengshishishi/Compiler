@@ -78,6 +78,7 @@ fun invalidOperands tps e0 e1 pos =
         (ppType (valueType e0)) ^ " (" ^ (ppVal 0 e0) ^ ") and " ^
         (ppType (valueType e1)) ^ " (" ^ (ppVal 0 e1) ^ ") instead", pos)
     end
+
 (* Evaluating
     1. binary operators +, -, etc.
     3. relational operator <,> *)
@@ -141,7 +142,6 @@ fun bindParams ([], [], fid, pd, pc) = SymTab.empty()
                                " does not matches actual argument: "^
                                ppVal 0 a, pc)
         end
-
 
 (* Interpreter for Fasto expressions:
     1. vtab holds bindings between variable names and
@@ -408,6 +408,55 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
   (* TODO TASK 1: add cases for Times, Divide, Negate, Not, And, Or.  Look at
   how Plus and Minus are implemented for inspiration.
    *)
+
+ | evalExp ( Times(e1, e2, pos), vtab, ftab ) =
+        let val res1   = evalExp(e1, vtab, ftab)
+            val res2   = evalExp(e2, vtab, ftab)
+        in  evalBinopNum(op *, res1, res2, pos)
+        end
+
+ | evalExp (Divide(e1, e2, pos), vtab, ftab) =
+       let val res1 = evalExp(e1, vtab, ftab)
+           val res2 = evalExp(e2, vtab, ftab)
+       in evalBinopNum(Int.quot, res1, res2, pos)
+       end
+
+ | evalExp (Negate(e1, pos), vtab, ftab) = 
+       let val res = evalExp(e1, vtab, ftab)
+       in case res of
+           IntVal n => IntVal (~1*n)
+          | _ => raise Error ("Argument for Negate isn't an int", pos)
+       end
+
+ | evalExp (Not(e1, pos), vtab, ftab) = 
+       let val res = evalExp(e1, vtab, ftab)
+       in  case res of
+          BoolVal b => if b then BoolVal false else BoolVal true
+         | _ => raise Error ("Argument for Not isn't a bool", pos)
+
+       end
+
+ | evalExp (And(e1, e2, pos), vtab, ftab) =
+       let val res = evalExp(e1, vtab, ftab)
+       in case res of
+           BoolVal b1 => if b1
+                         then case evalExp(e2, vtab, ftab) of
+                               BoolVal b2 => if b2 then res else BoolVal b2
+                              | _ => raise Error ("Argument of && must be a bool", pos)
+                         else BoolVal b1
+          | _ => raise Error ("Argument of && must be a bool", pos)
+       end
+
+ | evalExp (Or(e1, e2, pos), vtab, ftab) =
+       let val res1 = evalExp(e1, vtab, ftab)
+       in  case res1 of
+            BoolVal b1 => (if b1
+                           then BoolVal b1
+                           else case evalExp(e2, vtab, ftab) of
+                                 BoolVal b2 => BoolVal b2
+                                | _ => raise Error ("Argument of || must be a bool", pos))
+           | _ => raise Error ("Argument of || must be a bool", pos)
+       end
 
 (* Interpreter for Fasto function calls:
     1. f is the function declaration.

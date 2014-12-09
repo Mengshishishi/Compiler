@@ -78,25 +78,25 @@ rule Token = parse
 			     | SOME s => String.substring(s,1,
 							  String.size s - 2)),
 			     getPos lexbuf) }
-  | `+`                 { Parser.PLUS   (getPos lexbuf) }
-  | `-`                 { Parser.MINUS  (getPos lexbuf) }
-  | "=="                { Parser.DEQ    (getPos lexbuf) }
-  | `*`					{ Parser.MULT	(getPos lexbuf) }
+  | `+`         { Parser.PLUS   (getPos lexbuf) }
+  | `-`         { Parser.MINUS  (getPos lexbuf) }
+  | "=="        { Parser.DEQ    (getPos lexbuf) }
+  | `*`				  { Parser.MULT	(getPos lexbuf) }
   | `/`					{ Parser.DIV	(getPos lexbuf) }
   | "&&"				{ Parser.AND	(getPos lexbuf) }
   | "||"				{ Parser.OR		(getPos lexbuf) }
-  | `1`					{ Parser.TRUE	(getPos lexbuf) }
-  | `0`					{ Parser.FALSE	(getPos lexbuf) }
+  | "true"			{ Parser.TRUE	(getPos lexbuf) }
+  | "false"			{ Parser.FALSE	(getPos lexbuf) }
   | `~`					{ Parser.NOTINT	(getPos lexbuf) }
   | "not"				{ Parser.NOTBOOL  (getPos lexbuf) }
-  | `=`                 { Parser.EQ     (getPos lexbuf) }
-  | `<`                 { Parser.LTH    (getPos lexbuf) }
-  | `(`                 { Parser.LPAR   (getPos lexbuf) }
-  | `)`                 { Parser.RPAR   (getPos lexbuf) }
-  | `[`                 { Parser.LBRACKET (getPos lexbuf) }
-  | `]`                 { Parser.RBRACKET (getPos lexbuf) }
-  | `{`                 { Parser.LCURLY (getPos lexbuf) }
-  | `}`                 { Parser.RCURLY (getPos lexbuf) }
-  | `,`                 { Parser.COMMA (getPos lexbuf) }
-  | eof                 { Parser.EOF (getPos lexbuf) }
-  | _                   { lexerError lexbuf "Illegal symbol in input" };
+  | `=`         { Parser.EQ     (getPos lexbuf) }
+  | `<`         { Parser.LTH    (getPos lexbuf) }
+  | `(`         { Parser.LPAR   (getPos lexbuf) }
+  | `)`         { Parser.RPAR   (getPos lexbuf) }
+  | `[`         { Parser.LBRACKET (getPos lexbuf) }
+  | `]`         { Parser.RBRACKET (getPos lexbuf) }
+  | `{`         { Parser.LCURLY (getPos lexbuf) }
+  | `}`         { Parser.RCURLY (getPos lexbuf) }
+  | `,`         { Parser.COMMA (getPos lexbuf) }
+  | eof         { Parser.EOF (getPos lexbuf) }
+  | _           { lexerError lexbuf "Illegal symbol in input" };

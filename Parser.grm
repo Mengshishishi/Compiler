@@ -7,7 +7,7 @@ open Fasto.UnknownTypes
 
 %}
 
-%token <(int*int)> IF THEN ELSE LET IN INT BOOL CHAR EOF
+%token <(int*int)> IF THEN ELSE LET IN INT BOOL CHAR EOF TRUE FALSE
 %token <string*(int*int)> ID STRINGLIT
 %token <int*(int*int)> NUM
 %token <char*(int*int)> CHARLIT
@@ -24,7 +24,7 @@ open Fasto.UnknownTypes
 %left AND
 %left PLUS MINUS
 %left MULT DIV
-%left NOTINT NOTBOOL
+%right NOTINT NOTBOOL
 
 %start Prog
 %type <Fasto.UnknownTypes.Prog> Prog
@@ -94,6 +94,8 @@ Exp :     NUM            { Constant (IntVal (#1 $1), #2 $1) }
         | NOTINT    Exp  { Negate($2, $1)     }
         | Exp DEQ   Exp  { Equal ($1, $3, $2) }
         | Exp LTH   Exp  { Less  ($1, $3, $2) }
+        | TRUE           { true $1        }
+        | FALSE          { false $1        }
 
         | IF Exp THEN Exp ELSE Exp %prec ifprec
                          { If ($2, $4, $6, $1) }

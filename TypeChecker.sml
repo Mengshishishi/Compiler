@@ -62,7 +62,7 @@ fun printable (Int) = true
 fun checkBinOp ftab vtab (pos, t, e1, e2) =
     let val (t1, e1') = checkExp ftab vtab e1
         val (t2, e2') = checkExp ftab vtab e2
-        val t = unifyTypes pos (t1, t2)
+         val t = unifyTypes pos (t, unifyTypes pos (t1, t2))
     in (t, e1', e2') end
 
 (* Determine the type of an expression.  On the way, decorate each node in the
@@ -246,7 +246,9 @@ and checkExp ftab vtab (exp : In.Exp)
                               ^ ppType n_type, pos)
          end
 
-  (* TODO TASK 1: add case for constant booleans (True/False). *)
+  (* TODO TASK 1: add case for constant booleans (True/False). 
+
+  SKAL IKKE LAVES, SE DISKUSSIONS FORUM *)
 
   (* TODO TASK 1: add cases for Times, Divide, Negate, Not, And, Or.  Look at
   how Plus and Minus are implemented for inspiration.
@@ -272,29 +274,32 @@ and checkExp ftab vtab (exp : In.Exp)
       => let val (t, e1_dec) = checkExp ftab vtab e1
          in if t = Int
             then (Int, Out.Negate(e1_dec, pos))
-            else raise Error ("Argument of negate not an Int", pos)
+            else raise Error ("Argument of ~ not an Int", pos)
          end
-     (* Skal måske ændres til at returnere true/false alt efter hvad e1_dec er *)
+
      | In.Not (e1, pos)
       => let val (t, e1_dec) = checkExp ftab vtab e1
          in if t = Bool
             then (Bool, Out.Not(e1_dec, pos))
             else raise Error ("Argument of not must be a bool", pos)
          end
-(* Kompilerer ikke. Virker formentlig først når vi har cases for true/false
+
      | In.And (e1, e2, pos)
       => let val (t1, e1_dec) = checkExp ftab vtab e1
-         in if e1_dec = true
-            then let val (t2, e2_dec) = checkExp ftab vtab e2
-                 in if t2 = Bool
-                    then (Bool, Out.And(e1_dec, e2_dec, pos))
-                    else raise Error ("Right side argument of And isn't a bool", pos)
-                 end
-            else if t1 = Bool
-                 then (false, Out.And(e1_dec, e2_dec, pos))
-                 else raise Error ("Left side argument of And isn't a bool", pos)
+             val (t2, e2_dec) = checkExp ftab vtab e2
+         in if (t1 = Bool andalso t2 = Bool)
+            then (Bool, Out.And(e1_dec, e2_dec, pos))
+            else raise Error ("Argument of && isn't a bool", pos)
          end
-*)
+
+     | In.Or (e1, e2, pos)
+      => let val (t1, e1_dec) = checkExp ftab vtab e1
+             val (t2, e2_dec) = checkExp ftab vtab e2
+         in if (t1 = Bool andalso t2 = Bool)
+            then (Bool, Out.Or(e1_dec, e2_dec, pos))
+            else raise Error ("Argument of || isn't a bool", pos)
+         end
+
   (* TODO: TASK 2: Add case for Scan. Quite similar to Reduce. *)
 
   (* TODO: TASK 2: Add case for Filter.  Quite similar to map, except that the
