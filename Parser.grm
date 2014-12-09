@@ -13,14 +13,18 @@ open Fasto.UnknownTypes
 %token <char*(int*int)> CHARLIT
 %token <(int*int)> PLUS MINUS MULT DIV AND OR DEQ EQ LTH
 %token <(int*int)> LPAR RPAR LBRACKET RBRACKET LCURLY RCURLY
-%token <(int)> TRUE FALSE NOTINT NOTBOOL
+%token <(int*int)> NOTINT NOTBOOL
 %token <(int*int)> COMMA
 %token <(int*int)> FUN FN IOTA REPLICATE MAP REDUCE FILTER SCAN READ WRITE
 %token <(int*int)> OP
 
-%nonassoc ifprec letprec NOTINT NOTBOOL
+%nonassoc ifprec letprec
 %left DEQ LTH
-%left PLUS MINUS MULT DIV
+%left OR
+%left AND
+%left PLUS MINUS
+%left MULT DIV
+%left NOTINT NOTBOOL
 
 %start Prog
 %type <Fasto.UnknownTypes.Prog> Prog
@@ -80,11 +84,17 @@ Exp :     NUM            { Constant (IntVal (#1 $1), #2 $1) }
         | STRINGLIT      { StringLit $1 }
         | LCURLY Exps RCURLY
                          { ArrayLit ($2, (), $1) }
-        | Exp PLUS  Exp  { Plus ($1, $3, $2) }
-        | Exp MINUS Exp  { Minus($1, $3, $2) }
-		| Exp MULT	Exp  { Times($1, $3, $2) }
-        | Exp DEQ   Exp  { Equal($1, $3, $2) }
-        | Exp LTH   Exp  { Less ($1, $3, $2) }
+        | Exp PLUS  Exp  { Plus  ($1, $3, $2) }
+        | Exp MINUS Exp  { Minus ($1, $3, $2) }
+		| Exp MULT	Exp  { Times ($1, $3, $2) }
+        | Exp DIV   Exp  { Divide($1, $3, $2) }
+        | Exp AND   Exp  { And   ($1, $3, $2) }
+        | Exp OR    Exp  { Or    ($1, $3, $2) }
+        | NOTBOOL   Exp  { Not   ($2, $1)     }
+        | NOTINT    Exp  { Negate($2, $1)     }
+        | Exp DEQ   Exp  { Equal ($1, $3, $2) }
+        | Exp LTH   Exp  { Less  ($1, $3, $2) }
+
         | IF Exp THEN Exp ELSE Exp %prec ifprec
                          { If ($2, $4, $6, $1) }
         | ID LPAR Exps RPAR
