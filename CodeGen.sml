@@ -610,13 +610,16 @@ structure CodeGen = struct
         end
 
   (* TODO TASK 1: add case for constant booleans (True/False). *)
+    | Constant(BoolVal true, pos) => [MIPS.ADDI (place, "$zero", "1")]
+
+    | Constant(BoolVal false, pos) => [MIPS.ADDI (place, "$zero", "0")]
 
   (* TODO TASK 1: add cases for Times, Divide, Negate, Not, And, Or.  Look at
   how Plus and Minus are implemented for inspiration.  Remember that
   And and Or are short-circuiting - look at If to see how that could
   be handled (or your textbook).
    *)
-
+ 
     | Times (e1, e2, pos) =>
         let val t1 = newName "mult_L"
             val t2 = newName "mult_R"
@@ -631,6 +634,44 @@ structure CodeGen = struct
             val code1 = compileExp e1 vtable t1
             val code2 = compileExp e2 vtable t2
         in code1 @ code2 @ [Mips.DIV (place,t1,t2)]
+        end
+
+    | Negate (e1, pos) =>
+        let val t1 = newName "Negate"
+            val code1 = compileExp e1 vtable t1
+        in code1 @ [Mips.SUB (place, "$zero", t1)]
+        end
+    
+    | Not(e1, pos) => 
+        let val t1 = newName "Not"
+            val code = compileExp e1 vtable t1
+        in  code @ [MIPS.LI (place, "1"), MIPS.XOR (place, t1, place)]
+        end
+
+    | And (e1, e2, pos) =>
+        let val t1 = newName "l_And"
+            val t2 = newName "r_And"
+            val fLabel = newName "false"
+            val code1 = compileExp e1 vtable t1
+            val code2 = compileExp e2 vtable t2
+        in  [MIPS.LI (place, "0")] @ code1 @
+            [MIPS.BEQ (t1, "0", fLabel)] @
+            code2 @ [MIPS.BEQ (t2, "0", fLabel), 
+                     MIPS.LI (place, "1"),
+                     MIPS.LABEL fLabel]
+        end
+
+   | Equal (e1, e2, pos) =>
+        let val t1 = newName "eq_L"
+            val t2 = newName "eq_R"
+            val code1 = compileExp e1 vtable t1
+            val code2 = compileExp e2 vtable t2
+            val falseLabel = newName "false"
+        in  code1 @ code2 @
+            [ Mips.LI (place,"0")
+            , Mips.BNE (t1,t2,falseLabel)
+            , Mips.LI (place,"1")
+            , Mips.LABEL falseLabel ]
         end
 
 
