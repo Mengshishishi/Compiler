@@ -649,30 +649,21 @@ structure CodeGen = struct
         end
 
     | And (e1, e2, pos) =>
-        let val t1 = newName "l_And"
-            val t2 = newName "r_And"
-            val fLabel = newName "false"
-            val code1 = compileExp e1 vtable t1
-            val code2 = compileExp e2 vtable t2
-        in  [MIPS.LI (place, "0")] @ code1 @
-            [MIPS.BEQ (t1, "0", fLabel)] @
-            code2 @ [MIPS.BEQ (t2, "0", fLabel), 
-                     MIPS.LI (place, "1"),
-                     MIPS.LABEL fLabel]
-        end
+      let val t1 = newName "l_And"
+          val t2 = newName "r_And"
+          val code1 = compileExp e1 vtable t1
+          val code2 = compileExp e2 vtable t2
+      in code1 @ code2 @ [MIPS.AND (place, t1, t2)]   
+      end
 
-   | Equal (e1, e2, pos) =>
-        let val t1 = newName "eq_L"
-            val t2 = newName "eq_R"
-            val code1 = compileExp e1 vtable t1
-            val code2 = compileExp e2 vtable t2
-            val falseLabel = newName "false"
-        in  code1 @ code2 @
-            [ Mips.LI (place,"0")
-            , Mips.BNE (t1,t2,falseLabel)
-            , Mips.LI (place,"1")
-            , Mips.LABEL falseLabel ]
-        end
+   | Or (e1, e2, pos) =>
+      let val t1 = newName "l_Or"
+          val t2 = newName "r_Or"
+          val code1 = compileExp e1 vtable t1
+          val code2 = compileExp e2 vtable t2
+      in code1 @ code2 @ [MIPS.OR (place, t1, t2)]
+         
+      end
 
 
   (* TODO: TASK 2: Add case for Scan.
