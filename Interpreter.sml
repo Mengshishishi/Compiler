@@ -431,7 +431,8 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
  | evalExp (Not(e1, pos), vtab, ftab) = 
        let val res = evalExp(e1, vtab, ftab)
        in  case res of
-          BoolVal b => if b then BoolVal false else BoolVal true
+           BoolVal true => BoolVal false
+         | BoolVal false => BoolVal true
          | _ => raise Error ("Argument for Not isn't a bool", pos)
 
        end

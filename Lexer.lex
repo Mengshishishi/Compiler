@@ -62,6 +62,9 @@ rule Token = parse
   | [`0`-`9`]+          { case Int.fromString (getLexeme lexbuf) of
                                NONE   => lexerError lexbuf "Bad integer"
                              | SOME i => Parser.NUM (i, getPos lexbuf) }
+  | "not"       { Parser.NOTBOOL  (getPos lexbuf) }
+  | "true"      { Parser.TRUE (getPos lexbuf) }
+  | "false"     { Parser.FALSE  (getPos lexbuf) }
   | [`a`-`z` `A`-`Z`] [`a`-`z` `A`-`Z` `0`-`9` `_`]*
                         { keyword (getLexeme lexbuf,getPos lexbuf) }
   | `'` ([` ` `!` `#`-`&` `(`-`[` `]`-`~`] | `\`[` `-`~`]) `'`
@@ -85,10 +88,7 @@ rule Token = parse
   | `/`					{ Parser.DIV	(getPos lexbuf) }
   | "&&"				{ Parser.AND	(getPos lexbuf) }
   | "||"				{ Parser.OR		(getPos lexbuf) }
-  | "true"			{ Parser.TRUE	(getPos lexbuf) }
-  | "false"			{ Parser.FALSE	(getPos lexbuf) }
   | `~`					{ Parser.NOTINT	(getPos lexbuf) }
-  | "not"				{ Parser.NOTBOOL  (getPos lexbuf) }
   | `=`         { Parser.EQ     (getPos lexbuf) }
   | `<`         { Parser.LTH    (getPos lexbuf) }
   | `(`         { Parser.LPAR   (getPos lexbuf) }

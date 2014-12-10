@@ -617,6 +617,23 @@ structure CodeGen = struct
   be handled (or your textbook).
    *)
 
+    | Times (e1, e2, pos) =>
+        let val t1 = newName "mult_L"
+            val t2 = newName "mult_R"
+            val code1 = compileExp e1 vtable t1
+            val code2 = compileExp e2 vtable t2
+        in code1 @ code2 @ [Mips.MUL (place,t1,t2)]
+        end   
+
+    | Divide (e1, e2, pos) =>
+        let val t1 = newName "div_L"
+            val t2 = newName "div_R"
+            val code1 = compileExp e1 vtable t1
+            val code2 = compileExp e2 vtable t2
+        in code1 @ code2 @ [Mips.DIV (place,t1,t2)]
+        end
+
+
   (* TODO: TASK 2: Add case for Scan.
 
      This can be implemented as sort of a mix between map and reduce.  Start
