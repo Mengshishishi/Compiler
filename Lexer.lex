@@ -37,6 +37,9 @@
        | "bool"         => Parser.BOOL pos
        | "char"         => Parser.CHAR pos
        | "fun"          => Parser.FUN pos
+       | "not"          => Parser.NOTBOOL pos
+       | "true"         => Parser.TRUE pos
+       | "false"        => Parser.FALSE pos
 
 (* specials: *)
        | "iota"         => Parser.IOTA pos
@@ -62,9 +65,6 @@ rule Token = parse
   | [`0`-`9`]+          { case Int.fromString (getLexeme lexbuf) of
                                NONE   => lexerError lexbuf "Bad integer"
                              | SOME i => Parser.NUM (i, getPos lexbuf) }
-  | "not"       { Parser.NOTBOOL  (getPos lexbuf) }
-  | "true"      { Parser.TRUE (getPos lexbuf) }
-  | "false"     { Parser.FALSE  (getPos lexbuf) }
   | [`a`-`z` `A`-`Z`] [`a`-`z` `A`-`Z` `0`-`9` `_`]*
                         { keyword (getLexeme lexbuf,getPos lexbuf) }
   | `'` ([` ` `!` `#`-`&` `(`-`[` `]`-`~`] | `\`[` `-`~`]) `'`

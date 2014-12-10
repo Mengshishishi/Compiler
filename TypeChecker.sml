@@ -301,10 +301,28 @@ and checkExp ftab vtab (exp : In.Exp)
          end
 
   (* TODO: TASK 2: Add case for Scan. Quite similar to Reduce. *)
+     
 
   (* TODO: TASK 2: Add case for Filter.  Quite similar to map, except that the
      return type is the same as the input array type, and the function must
      return bool.  *)
+
+    | In.Filter (f, arr_exp, _, pos) 
+      => let val (arr_type, arr_exp_dec) = checkExp ftab vtab arr_exp
+             val elem_type =
+                 case arr_type of
+                   Array t => t
+                  | _ => raise Error ("Filter: Argument not an array", pos)
+             val (f', f_res_type, f_arg_type) =
+                  case checkFunArg (f, vtab, ftab, pos) of
+                        (f', Bool, [a1]) => (f', Bool, a1)
+                      | (_, _, args) => raise Error ("Filter: Function must have return type bool.", pos)
+         in if elem_type = f_arg_type
+            then (Array arr_type,
+                   Out.Filter (f', arr_exp_dec, elem_type, pos))
+            else raise Error ("Filter: Array element types not the same as function input", pos)
+
+         end
 
   (* TODO TASK 5: add case for ArrCompr.
 
