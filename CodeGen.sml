@@ -567,6 +567,60 @@ structure CodeGen = struct
            @ loop_footer
         end
 
+	 | filter (farg, arr_exp, elem_type, ret_type, pos) =>
+        let val size_reg = newName "size_reg" (* size of input/output array *)
+            val arr_reg  = newName "arr_reg" (* address of array *)
+            val elem_reg = newName "elem_reg" (* address of single element *)
+            val res_reg = newName "res_reg"
+			val bool_reg = newName "bool_reg"
+            val arr_code = compileExp arr_exp vtable arr_reg
+
+            val get_size = [ Mips.LW (size_reg, arr_reg, "0") ]
+
+            val addr_reg = newName "addr_reg" (* address of element in new array *)
+            val i_reg = newName "i_reg"
+			val j_reg = newName "j_reg"
+            val init_regs = [ Mips.MOVE (i_reg, "0")
+							, Mips.MOVE (j_reg, "0")
+                            , Mips.ADDI (elem_reg, arr_reg, "4") ]
+
+            val loop_beg = newName "loop_beg"
+            val loop_end = newName "loop_end"
+            val tmp_reg = newName "tmp_reg"
+            val loop_header = [ Mips.LABEL (loop_beg)
+                              , Mips.SUB (tmp_reg, i_reg, size_reg)
+                              , Mips.BGEZ (tmp_reg, loop_end) ]
+
+            (* map is 'arr[i] = f(old_arr[i])'. *)
+            val loop_map0 =
+                case getElemSize elem_type of
+                    One => Mips.LB(res_reg, elem_reg, "0")
+                           :: applyFunArg(farg, [res_reg], vtable, bool_reg, pos)
+                           @ [ Mips.ADDI(elem_reg, elem_reg, "1") ]
+                  | Four => Mips.LW(res_reg, elem_reg, "0")
+                            :: applyFunArg(farg, [res_reg], vtable, bool_reg, pos)
+                            @ [ Mips.ADDI(elem_reg, elem_reg, "4") ]
+            val loop_map1 =
+                [Mips.BEQ (bool_reg, "0", false_label1)
+				, Mips.ADDI (j_reg, j_reg, "1")
+				, Mips.LABEL false_label1 ]
+				
+            val loop_footer =
+                [ Mips.ADDI (i_reg, i_reg, "1")
+                , Mips.J loop_beg
+                , Mips.LABEL loop_end
+                ]
+        in [Mips.COMMENT "THIS IS THE BEGINNING!"]
+		   @ arr_code
+           @ get_size
+           @ init_regs
+           @ loop_header
+           @ loop_map0
+           @ loop_map1
+           @ loop_footer
+		   @ [Mips.COMMENT "THIS IS THE END!"]
+        end
+	
     (* reduce(f, acc, {x1, x2, ...}) = f(..., f(x2, f(x1, acc))) *)
     | Reduce (binop, acc_exp, arr_exp, tp, pos) =>
         let val arr_reg  = newName "arr_reg"   (* address of array *)
