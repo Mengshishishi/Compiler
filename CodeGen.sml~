@@ -646,7 +646,7 @@ structure CodeGen = struct
     | Not(e1, pos) => 
         let val t1 = newName "Not"
             val code = compileExp e1 vtable t1
-        in  code @ [Mips.LI (place, "1"), Mips.XOR (place, t1, place)]
+        in  code @ [Mips.LI (place, "1"), MIPS.XOR (place, t1, place)]
         end
 
     | And (e1, e2, pos) =>
