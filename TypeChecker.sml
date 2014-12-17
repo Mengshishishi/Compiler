@@ -318,7 +318,7 @@ and checkExp ftab vtab (exp : In.Exp)
                         (f', Bool, [a1]) => (f', Bool, a1)
                       | (_, _, args) => raise Error ("Filter: Function must have return type bool.", pos)
          in if elem_type = f_arg_type
-            then (Array arr_type,
+            then (Array f_arg_type,
                    Out.Filter (f', arr_exp_dec, elem_type, pos))
             else raise Error ("Filter: Array element types not the same as function input", pos)
 
