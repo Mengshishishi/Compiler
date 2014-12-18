@@ -301,7 +301,26 @@ and checkExp ftab vtab (exp : In.Exp)
          end
 
   (* TODO: TASK 2: Add case for Scan. Quite similar to Reduce. *)
-     
+     | In.Scan (f, n_exp, arr_exp, _, pos)
+       => let val (n_type, n_dec) = checkExp ftab vtab n_exp
+              val (arr_type, arr_dec) = checkExp ftab vtab arr_exp
+              val elem_type =
+                  case arr_type of
+                       Array t => t
+                      | _ => raise Error ("Scan: Argument not an array", pos)
+              val (f', f_arg_type) =
+                   case checkFunArg (f, vtab, ftab, pos) of
+                        (f', res, [a1, a2]) => if a1 = a2 andalso a2 = res
+                                               then (f', res)
+                                               else raise Error ("Scan: Incompatible function type", pos)
+                      | (_, res, args) => raise Error ("Scan: Incompatible function type", pos)
+          in if elem_type = f_arg_type
+             then if elem_type = n_type
+                  then (Array f_arg_type,
+                        Out.Scan(f', n_dec, arr_dec, elem_type, pos))
+                  else raise Error ("Scan: Type of second argument does not match array type", pos)
+             else raise Error ("Scan: Type of array doesn't match function input type", pos)
+          end
 
   (* TODO: TASK 2: Add case for Filter.  Quite similar to map, except that the
      return type is the same as the input array type, and the function must
