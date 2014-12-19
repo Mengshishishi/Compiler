@@ -673,6 +673,70 @@ structure CodeGen = struct
      by allocating an array of the same size as the input array, then fill it
      by iterating through the input array, calling the given function with the
      accumulator and the current element. *)
+  | Scan (binop, acc_exp, arr_exp, tp, pos)
+    => let val size_reg = newName "size_reg" (* Size of input array *)
+           val arr_reg = newName "arr_reg"   (* Address of input array *)
+           val elem_reg = newName "elem_reg" (* Address of element in input array *)
+           val res_reg = newName "res_reg"   (* Output array *)
+           val res_addr = newName "res_addr" (* Address of element in new array *)
+           val tmp_reg = newName "tmp_reg"   (* For storing results of function calls *)
+           val i_reg = newName "i_reg"       (* Counter for the loop *)
+           val arr_code = compileExp arr_exp vtable arr_reg
+
+           val get_size = [Mips.LW (size_reg, arr_reg, "0"),
+                           Mips.ADDI (size_reg, size_reg, "1")]
+
+           val acc_code = compileExp acc_exp vtable tmp_reg
+
+           val init_regs = [Mips.ADDI (res_addr, place, "4"),
+                            Mips.ADDI (elem_reg, arr_reg, "4"),
+                            Mips.MOVE (i_reg, "0")]
+                          @ (case getElemSize tp of
+                              One => [Mips.SB (tmp_reg, res_addr, "0"),
+                                      Mips.ADDI(res_addr, res_addr, "1")]
+                            | Four => [Mips.SW (tmp_reg, res_addr, "0"),
+                                       Mips.ADDI(res_addr, res_addr, "4")])
+
+           val loop_beg = newName "loop_beg"
+           val loop_footer = newName "loop_footer"
+           val loop_end = newName "loop_end"
+           val tmp_reg2 = newName "tmp_reg2" (* For the i < n comparison and other stuff*)
+           val loop_header = [Mips.LABEL (loop_beg),
+                              Mips.SLT (tmp_reg2, i_reg, size_reg),
+                              Mips.BEQ (tmp_reg2, "$zero", loop_end)]
+
+           val loop_1 = case getElemSize tp of
+                      One => [Mips.LB (tmp_reg2, elem_reg, "0"),
+                              Mips.ADDI (elem_reg, elem_reg, "1")]
+                    | Four => [Mips.LW (tmp_reg2, elem_reg, "0"),
+                               Mips.ADDI (elem_reg, elem_reg, "4")]
+
+           val apply_code =
+                applyFunArg(binop, [tmp_reg, tmp_reg2], vtable, tmp_reg, pos)
+
+           val loop_2 = case getElemSize tp of
+                          One => [Mips.SB (tmp_reg, res_addr, "0"),
+                                  Mips.ADDI (res_addr, res_addr, "1"),
+                                  Mips.ADDI (i_reg, i_reg, "1"),
+                                  Mips.J (loop_beg)]
+                        | Four => [Mips.SW (tmp_reg, res_addr, "0"),
+                                   Mips.ADDI (res_addr, res_addr, "4"),
+                                   Mips.ADDI (i_reg, i_reg, "1"),
+                                   Mips.J (loop_beg)]
+
+           val loop_footer = [Mips.LABEL (loop_end),
+                              Mips.SW (size_reg, place, "0")]
+          in  arr_code
+             @ get_size
+             @ dynalloc (size_reg, place, tp)
+             @ acc_code
+             @ init_regs
+             @ loop_header
+             @ loop_1
+             @ apply_code
+             @ loop_2
+             @ loop_footer
+          end
 
   (* TODO: TASK 2: Add case for Filter.
 
@@ -736,10 +800,10 @@ structure CodeGen = struct
                             Mips.ADDI(i_reg, i_reg, "1"),
                             Mips.J (loop_beg),
                             Mips.LABEL (loop_end),
-                            Mips.SW (y_len, res_reg, "0")]
+                            Mips.SW (y_len, place, "0")]
          in arr_code
            @ get_size
-           @ dynalloc (y_len, place, elem_type)
+           @ dynalloc (size_reg, place, elem_type)
            @ init_regs
            @ loop_header
            @ loop_1
