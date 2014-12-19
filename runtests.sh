@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Compile the compiler and run the test suite.
 #
@@ -17,7 +17,7 @@
 set -e # Die on first error.
 
 IS_CYGWIN=""
-if [[ $(uname -o 2> /dev/null) == "Cygwin" ]]; then
+if [ "$(uname -o 2> /dev/null)" = "Cygwin" ]; then
     IS_CYGWIN="true"
 fi
 
@@ -76,7 +76,7 @@ check_equal() {
 
         EXCEPTED=$(fix_whitespace "$RESDIR/$OUTPUT")
         ACTUAL=$(fix_whitespace "$TESTOUT")
-        if [[ $EXCEPTED == $ACTUAL ]]; then
+        if [ "$EXCEPTED" = "$ACTUAL" ]; then
             rm -f $TESTOUT
         else
             echo "Output for $PROG does not match expected output."
@@ -99,7 +99,6 @@ for FO in $RESDIR/*fo; do
     ERROUT=$(echo $FO|sed 's/fo$/err/')
     ASM=$(echo $FO|sed 's/fo$/asm/')
     TESTOUT=$RESDIR/$OUTPUT-testresult
-    CORRECTOUT=$(mktemp)
 
     if [ -f $RESDIR/$INPUT ]; then
         # Is positive test
@@ -131,7 +130,7 @@ for FO in $RESDIR/*fo; do
 
             EXCEPTED=$(fix_whitespace $RESDIR/$ERROUT)
             ACTUAL=$(fix_whitespace $TESTOUT)
-            if [[ $EXCEPTED == $ACTUAL ]]  ; then
+            if [ "$EXCEPTED" = "$ACTUAL" ]; then
                 rm -f $TESTOUT
             else
                 echo "Error message for $PROG does not match expected."
@@ -139,5 +138,4 @@ for FO in $RESDIR/*fo; do
             fi
         fi
     fi
-    rm -f $CORRECTOUT
 done
