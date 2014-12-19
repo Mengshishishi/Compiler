@@ -515,6 +515,8 @@ and evalFunArg (FunName fid, vtab, ftab, callpos) =
    appropriate FunDec from the lambda and passing it to
    callFunWithVtable.
     *)
+  | evalFunArg (Lambda (rettype, params, body, fpos), vtab, ftab, callpos) = 
+      (fn aargs => callFunWithVtable(FunDec("fn", rettype, params, body, fpos), aargs, vtab, ftab, callpos), rettype)
 
 (* Interpreter for Fasto programs:
     1. builds the function symbol table,
