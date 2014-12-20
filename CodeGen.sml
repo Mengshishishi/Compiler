@@ -827,6 +827,22 @@ structure CodeGen = struct
         lambda, then finally move the result of the body to the
         'place' register.
       *)
+    | applyFunArg (Lambda(rettype, params, body, fnpos), args, vtable, place, pos) =
+       let val tmp_reg = newName "tmp_reg"
+           fun getArgs     []      vtable  []  _     = ([], vtable)
+             | getArgs (Param (v,_)::vs) vtable (a::args) nextReg =
+             if nextReg > maxCaller
+             then raise Error ("Passing too many arguments!", (0,0))
+             else
+               let val vtable1 = SymTab.bind v a vtable (*   (v,vname)::vtable   *)
+                   val (code2,vtable2) = getArgs vs vtable1 args (nextReg + 1)
+               in ([Mips.MOVE (a, makeConst nextReg)]
+                   @ code2, vtable2)
+               end
+           val (_, vtable') = getArgs params vtable args minReg
+           val body_code = compileExp body vtable' tmp_reg
+       in body_code @ [Mips.MOVE (place, tmp_reg)]
+       end
 
   (* compile condition *)
   and compileCond c vtable tlab flab =
