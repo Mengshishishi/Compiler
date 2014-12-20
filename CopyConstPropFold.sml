@@ -45,7 +45,7 @@ fun copyConstPropFoldExp vtable e =
             val e2' = copyConstPropFoldExp vtable e2
         in case (e1', e2') of
                (Constant (IntVal x, _), Constant (IntVal y, _)) =>
-               Constant (IntVal (x+y), pos)
+               Constant (IntVal (x-y), pos)
              | (_, Constant (IntVal 0, _)) =>
                e1'
              | _ =>
@@ -57,7 +57,7 @@ fun copyConstPropFoldExp vtable e =
             val e2' = copyConstPropFoldExp vtable e2
         in case (e1', e2') of
                (Constant (IntVal x, _), Constant (IntVal y, _)) =>
-               Constant (IntVal (x+y), pos)
+               Constant (IntVal (x*y), pos)
              | (_, Constant (IntVal 0, _)) =>
                e1'
              | _ =>
@@ -69,7 +69,7 @@ fun copyConstPropFoldExp vtable e =
             val e2' = copyConstPropFoldExp vtable e2
         in case (e1', e2') of
                (Constant (IntVal x, _), Constant (IntVal y, _)) =>
-               Constant (IntVal (x+y), pos)
+               Constant (IntVal (x/y), pos)
              | (_, Constant (IntVal 0, _)) =>
                e1'
              | _ =>
