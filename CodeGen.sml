@@ -640,7 +640,7 @@ structure CodeGen = struct
     | Negate (e1, pos) =>
         let val t1 = newName "Negate"
             val code1 = compileExp e1 vtable t1
-        in code1 @ [Mips.SUB (place, "$zero", t1)]
+        in code1 @ [Mips.SUB (place, "0", t1)]
         end
     
     | Not(e1, pos) => 
