@@ -652,18 +652,31 @@ structure CodeGen = struct
     | And (e1, e2, pos) =>
       let val t1 = newName "l_And"
           val t2 = newName "r_And"
+          val false_label = newName "false_label"
+          val end_label = newName "end_label"
           val code1 = compileExp e1 vtable t1
+                     @ [Mips.BEQ (t1, "$zero", false_label)]
           val code2 = compileExp e2 vtable t2
-      in code1 @ code2 @ [Mips.AND (place, t1, t2)]   
+      in code1 @ code2 @ [Mips.MOVE (place, t2),
+                          Mips.J (end_label),
+                          Mips.LABEL (false_label),
+                          Mips.MOVE (place, "0"),
+                          Mips.LABEL (end_label)]
       end
 
    | Or (e1, e2, pos) =>
       let val t1 = newName "l_Or"
           val t2 = newName "r_Or"
+          val false_label = newName "false_label"
+          val end_label = newName "end_label"
           val code1 = compileExp e1 vtable t1
+                     @ [Mips.BEQ (t1, "$zero", false_label),
+                        Mips.MOVE (place, t1),
+                        Mips.J (end_label),
+                        Mips.LABEL (false_label)]
           val code2 = compileExp e2 vtable t2
-      in code1 @ code2 @ [Mips.OR (place, t1, t2)]
-         
+      in code1 @ code2 @ [Mips.MOVE (place, t2),
+                          Mips.LABEL (end_label)]
       end
 
 
