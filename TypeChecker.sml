@@ -359,11 +359,15 @@ and checkFunArg (In.FunName fname, vtab, ftab, pos) =
         checkFunWithVtable, then constructing an Out.Lambda from the
         result. *)
   | checkFunArg (In.Lambda (rettype, params, body, fnpos), vtab, ftab, pos) =
-      (case checkFunWithVtable (In.FunDec ("fn", rettype, params, body, fnpos), vtab, ftab, pos) of
-       Out.FunDec (_, ret_type, args, body_exp, fnpos') => (let val arg_types = map (fn (Param (_, ty)) => ty) args
-                                                           in  (Out.Lambda (ret_type, args, body_exp, fnpos'), ret_type, arg_types)
-                                                           end)
-      |_ => raise Error ("Dude wat", fnpos))
+      let val fakeFun = 
+              checkFunWithVtable (In.FunDec ("fn", rettype, params, body, fnpos), vtab, ftab, pos)
+      in (case fakeFun of
+           Out.FunDec (_, ret_type, args, body_exp, fnpos') =>
+                    (let val arg_types = map (fn (Param (_, ty)) => ty) args
+                     in  (Out.Lambda (ret_type, args, body_exp, fnpos'), ret_type, arg_types)
+                     end)
+      |_ => raise Error ("Something went terribly wrong.", fnpos))
+      end
 
 (* Check a function declaration, but using a given vtable rather
 than an empty one. *)
